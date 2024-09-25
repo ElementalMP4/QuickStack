@@ -4,8 +4,6 @@ if [ ! -w "/usr/local/bin" ]; then
     echo "You do not have write permission to '/usr/local/bin'. Try running with sudo."
     exit 1
 fi
-
-echo "Installing $SCRIPT_NAME to $INSTALL_DIR..."
 cp "./quickstack.py" "/usr/local/bin/quickstack"
 
 chmod +x "/usr/local/bin/quickstack"
