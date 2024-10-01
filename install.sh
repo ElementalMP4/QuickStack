@@ -1,16 +1,13 @@
 #!/bin/bash
 
-if [ ! -w "/usr/local/bin" ]; then
-    echo "You do not have write permission to '/usr/local/bin'. Try running with sudo."
-    exit 1
-fi
-cp "./quickstack.py" "/usr/local/bin/quickstack"
+INSTALL_DIR=
 
-chmod +x "/usr/local/bin/quickstack"
-
-if [ $? -eq 0 ]; then
-    echo "Installation successful!"
+if [ $OSTYPE == "linux-gnu" ]; then
+    INSTALL_DIR="/usr/local/bin/quickstack"
 else
-    echo "Error during installation."
-    exit 1
+    INSTALL_DIR=$HOME/bin/quickstack
 fi
+
+mkdir -p $HOME/bin
+cp ./quickstack.py $INSTALL_DIR
+chmod +x $INSTALL_DIR
