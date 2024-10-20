@@ -153,7 +153,17 @@ def logs_from_application(args):
         print_error(f"Failed to get logs from application")
 
 
-def get_remote_location(config):
+def get_remote_location(profiles, chosen_profile):
+    if not chosen_profile:
+        config = [p for p in profiles if p['default']]
+    else:
+        config = [p for p in profiles if p['profile'] == chosen_profile]
+
+    if not config:
+        print_error('No matching profile found - either specify a profile or set a default profile')
+
+    print_info('Using profile ' + profile)
+
     directory = get_application_name()
     if config["username"] == "root":
         directory = "/root/" + directory
@@ -166,7 +176,7 @@ def cloudpush(args):
     if not config_file_exists():
         print_error("QuickStack config file is required for cloudpush")
     config = get_config()["cloudpush"]
-    remote_location = get_remote_location(config)
+    remote_location = get_remote_location(config, args.profile)
     print_info("Pushing to " + remote_location)
     result = subprocess.run(["rsync", "-avzP", "--stats", "./", remote_location,
                             "--exclude", "target", "--exclude", "venv", "--exclude", "node_modules"], capture_output=not args.debug)
@@ -234,6 +244,8 @@ def get_parser():
         'cloudpush', help="Deploys the stack to the cloud")
     cloudpush_command.add_argument(
         "-d", "--debug", action="store_true", help="Enable debugging output")
+    cloudpush_command.add_argument(
+        "-p", "--profile", action="store_true", help="Choose a cloudpush profile")
     cloudpush_command.set_defaults(func=cloudpush)
 
     return parser, subparsers
