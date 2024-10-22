@@ -154,15 +154,20 @@ def logs_from_application(args):
 
 
 def get_remote_location(profiles, chosen_profile):
-    if not chosen_profile:
-        config = [p for p in profiles if p['default']]
+    config = []
+    if chosen_profile is None:
+        config = profiles[0]
     else:
+        print_info('Using profile ' + chosen_profile)
         config = [p for p in profiles if p['profile'] == chosen_profile]
 
-    if not config:
-        print_error('No matching profile found - either specify a profile or set a default profile')
+    if len(config) == 0:
+        print_error('No matching profile found')
 
-    print_info('Using profile ' + profile)
+    if len(config) > 1:
+        print_error("Please specify a profile, multiple profiles found")
+
+    config = config[0]
 
     directory = get_application_name()
     if config["username"] == "root":
@@ -245,7 +250,7 @@ def get_parser():
     cloudpush_command.add_argument(
         "-d", "--debug", action="store_true", help="Enable debugging output")
     cloudpush_command.add_argument(
-        "-p", "--profile", action="store_true", help="Choose a cloudpush profile")
+        "-p", "--profile", type=str, help="Choose a cloudpush profile")
     cloudpush_command.set_defaults(func=cloudpush)
 
     return parser, subparsers
