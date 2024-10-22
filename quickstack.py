@@ -7,46 +7,46 @@ import argparse
 import json
 from datetime import datetime
 
-BOLD = '\x1b[22m'
-BRIGHT = '\x1b[1m'
-RESET = '\x1b[0m'
+BOLD = "\x1b[22m"
+BRIGHT = "\x1b[1m"
+RESET = "\x1b[0m"
 
-RED = f'{BOLD}\x1b[31m{BRIGHT}'
-GREEN = f'{BOLD}\x1b[32m{BRIGHT}'
-YELLOW = f'{BOLD}\x1b[33m{BRIGHT}'
-BLUE = f'{BOLD}\x1b[36m{BRIGHT}'
-GREY = '\x1b[90m'
+RED = f"{BOLD}\x1b[31m{BRIGHT}"
+GREEN = f"{BOLD}\x1b[32m{BRIGHT}"
+YELLOW = f"{BOLD}\x1b[33m{BRIGHT}"
+BLUE = f"{BOLD}\x1b[36m{BRIGHT}"
+GREY = "\x1b[90m"
 
 
 def config_file_exists():
-    return os.path.exists('.qs')
+    return os.path.exists(".qs")
 
 
 def get_config():
-    with open('.qs', 'r') as config_file:
+    with open(".qs", "r") as config_file:
         return json.load(config_file)
 
 
 def get_timestamp():
     now = datetime.now()
-    return f'{GREY}[{now.strftime('%H:%M:%S.%f')[:-3]}]{RESET}'
+    return f"{GREY}[{now.strftime('%H:%M:%S.%f')[:-3]}]{RESET}"
 
 
 def print_info(message):
-    print(f'{get_timestamp()} [{YELLOW}INFO{RESET}] {message}')
+    print(f"{get_timestamp()} [{YELLOW}INFO{RESET}] {message}")
 
 
 def print_warning(message):
-    print(f'{get_timestamp()} [{BLUE}WARN{RESET}] {message}')
+    print(f"{get_timestamp()} [{BLUE}WARN{RESET}] {message}")
 
 
 def print_error(message):
-    print(f'{get_timestamp()} [{RED}FAIL{RESET}] {message}')
+    print(f"{get_timestamp()} [{RED}FAIL{RESET}] {message}")
     sys.exit(1)
 
 
 def print_success(message):
-    print(f'{get_timestamp()} [{GREEN} OK {RESET}] {message}')
+    print(f"{get_timestamp()} [{GREEN} OK {RESET}] {message}")
 
 
 def get_application_name():
