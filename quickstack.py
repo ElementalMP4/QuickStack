@@ -103,8 +103,7 @@ def start_compose_stack(args):
         print_error(f'Failed to start stack!')
     print_success(f'Successfully started stack!')
     if (args.attach):
-        subprocess.run(['docker', 'compose', 'logs', '--follow',
-                       get_application_name()], capture_output=False)
+        subprocess.run(['docker', 'compose', 'logs', '--follow'], capture_output=False)
 
 
 def restart_compose_stack(args):
@@ -116,8 +115,7 @@ def restart_compose_stack(args):
         print_error(f'Failed to restart stack!')
     print_success(f'Successfully restarted stack!')
     if (args.attach):
-        subprocess.run(['docker', 'compose', 'logs', '--follow',
-                       get_application_name()], capture_output=False)
+        subprocess.run(['docker', 'compose', 'logs', '--follow'], capture_output=False)
 
 
 def stop_compose_stack(args):
@@ -142,8 +140,12 @@ def destroy_compose_stack(args):
 
 def ssh_application(args):
     is_docker_running()
-    result = subprocess.run(['docker', 'compose', 'exec', get_application_name(
-    ), '/bin/bash'], capture_output=False)
+    if args.container:
+        app = args.container
+    else:
+        app = get_application_name()
+        
+    result = subprocess.run(['docker', 'compose', 'exec', app, '/bin/bash'], capture_output=False)
     if result.returncode == 1:
         print_error(f'Failed to SSH into application')
 
@@ -253,6 +255,8 @@ def get_parser():
     ssh_command = subparsers.add_parser(
         'ssh', help='SSH into an application container in the Docker stack')
     ssh_command.set_defaults(func=ssh_application)
+    ssh_command.add_argument(
+        '-c', '--container', required=False, help='Specify a container to SSH into')
 
     logs_command = subparsers.add_parser('logs', help='View application logs')
     logs_command.set_defaults(func=logs_from_application)
