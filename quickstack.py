@@ -58,13 +58,6 @@ def get_application_name():
     return name
 
 
-def is_docker_running():
-    result = subprocess.run(['docker', 'info'], capture_output=True)
-    if result.returncode != 0:
-        print_error(
-            'Unable to reach Docker - is it running? Do you need to run quickstack as root?')
-
-
 def create_network():
     result = subprocess.run(['docker', 'network', 'inspect',
                             'quickstack-platform-interconnect'], capture_output=True)
@@ -79,7 +72,16 @@ def create_network():
             print_success('Container network created!')
 
 
+def is_docker_running():
+    result = subprocess.run(['docker', 'info'], capture_output=True)
+    if result.returncode != 0:
+        print_error(
+            'Unable to reach Docker - is it running? Do you need to run quickstack as root?')
+    create_network()
+
+
 def build_compose_stack(args):
+    is_docker_running()
     print_info(f'Building application images...')
     build_args = ['docker', 'compose', 'build']
     if args.clean:
@@ -93,6 +95,7 @@ def build_compose_stack(args):
 
 
 def start_compose_stack(args):
+    is_docker_running()
     print_info(f'Starting stack...')
     result = subprocess.run(
         ['docker', 'compose', 'up', '-d'], capture_output=not args.debug)
@@ -105,6 +108,7 @@ def start_compose_stack(args):
 
 
 def restart_compose_stack(args):
+    is_docker_running()
     print_info(f'Restarting stack...')
     result = subprocess.run(
         ['docker', 'compose', 'restart'], capture_output=not args.debug)
@@ -117,6 +121,7 @@ def restart_compose_stack(args):
 
 
 def stop_compose_stack(args):
+    is_docker_running()
     print_info(f'Stopping stack...')
     result = subprocess.run(['docker', 'compose', 'stop'],
                             capture_output=not args.debug)
@@ -126,6 +131,7 @@ def stop_compose_stack(args):
 
 
 def destroy_compose_stack(args):
+    is_docker_running()
     print_info(f'Destroying stack...')
     result = subprocess.run(['docker', 'compose', 'down'],
                             capture_output=not args.debug)
@@ -135,6 +141,7 @@ def destroy_compose_stack(args):
 
 
 def ssh_application(args):
+    is_docker_running()
     result = subprocess.run(['docker', 'compose', 'exec', get_application_name(
     ), '/bin/bash'], capture_output=False)
     if result.returncode == 1:
@@ -147,8 +154,9 @@ def deploy_compose_stack(args):
 
 
 def logs_from_application(args):
-    result = subprocess.run(['docker', 'compose', 'logs',
-                            '--follow', get_application_name()], capture_output=False)
+    is_docker_running()
+    result = subprocess.run(
+        ['docker', 'compose', 'logs', '--follow'], capture_output=False)
     if result.returncode != 0:
         print_error(f'Failed to get logs from application')
 
@@ -172,6 +180,7 @@ def get_config_profile(profiles, chosen_profile):
 
     return config[0]
 
+
 def get_remote_location(config):
     directory = get_application_name()
     if config['username'] == 'root':
@@ -180,15 +189,17 @@ def get_remote_location(config):
         directory = '/home/' + config['username'] + '/' + directory
     return config['username'] + '@' + config['address'] + ':' + directory
 
+
 def apply_excludes(config, args):
     if not 'ignore' in config:
         return args
-    
+
     for exclude in config['ignore']:
         args.append('--exclude')
         args.append(exclude)
 
     return args
+
 
 def cloudpush(args):
     if not config_file_exists():
@@ -196,7 +207,8 @@ def cloudpush(args):
     config = get_config_profile(get_config()['cloudpush'], args.profile)
     remote_location = get_remote_location(config)
     print_info('Pushing to ' + remote_location)
-    cloudpushArgs = ['rsync', '-avzP', '--stats', './', remote_location, '--delete']
+    cloudpushArgs = ['rsync', '-avzP', '--stats',
+                     './', remote_location, '--delete']
     cloudpushArgs = apply_excludes(config, cloudpushArgs)
     result = subprocess.run(cloudpushArgs, capture_output=not args.debug)
     if result.returncode != 0:
@@ -272,8 +284,6 @@ def get_parser():
 
 def main():
     try:
-        is_docker_running()
-        create_network()
         parser, subparsers = get_parser()
         args = parser.parse_args()
         args.func(args)
