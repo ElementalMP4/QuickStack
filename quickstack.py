@@ -66,7 +66,7 @@ def create_network():
         print_warning('Container network doesn\'t exist yet...')
         result = subprocess.run(['docker', 'network', 'create', '-d', 'bridge',
                                 'quickstack-platform-interconnect'], capture_output=True)
-        if (result.returncode != 0):
+        if result.returncode != 0:
             print_error('Failed to create container network!')
         else:
             print_success('Container network created!')
@@ -102,7 +102,7 @@ def start_compose_stack(args):
     if result.returncode != 0:
         print_error(f'Failed to start stack!')
     print_success(f'Successfully started stack!')
-    if (args.attach):
+    if args.attach:
         subprocess.run(['docker', 'compose', 'logs', '--follow'], capture_output=False)
 
 
@@ -114,7 +114,7 @@ def restart_compose_stack(args):
     if result.returncode != 0:
         print_error(f'Failed to restart stack!')
     print_success(f'Successfully restarted stack!')
-    if (args.attach):
+    if args.attach:
         subprocess.run(['docker', 'compose', 'logs', '--follow'], capture_output=False)
 
 
@@ -157,8 +157,10 @@ def deploy_compose_stack(args):
 
 def logs_from_application(args):
     is_docker_running()
-    result = subprocess.run(
-        ['docker', 'compose', 'logs', '--follow'], capture_output=False)
+    logs_command = ['docker', 'compose', 'logs', '--follow']
+    if args.container:
+        logs_command.append(args.container)
+    result = subprocess.run(logs_command, capture_output=False)
     if result.returncode != 0:
         print_error(f'Failed to get logs from application')
 
@@ -260,6 +262,8 @@ def get_parser():
 
     logs_command = subparsers.add_parser('logs', help='View application logs')
     logs_command.set_defaults(func=logs_from_application)
+    logs_command.add_argument(
+        '-c', '--container', required=False, help='Specify a container to read logs from')
 
     restart_command = subparsers.add_parser(
         'restart', help='Restarts the entire stack')
